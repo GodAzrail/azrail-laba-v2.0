@@ -225,10 +225,10 @@ def get_amnezia_data():
                 f"I1 = {headers.get('I1', '<r 2><b 0x858000010001000000000669636c6f756403636f6d0000010001c00c000100010000105a00044d583737>')}\n"
                 f"I2 = \nI3 = \nI4 = \nI5 = \n\n"
                 f"[Peer]\n"
-                f"PublicKey = HUuaNcTnY0O26WnGjoJwl7ggub2g2g8m5K7EGr2K/1M=\n"
+                f"PublicKey = iljbNMHAOTnu13oei9BRPBZwF3b+o8snYF9C1O1sD3c=\n"
                 f"PresharedKey = QqFJqUSQ+JmN81BO7d6pkawUydO1zl+NiiS7OCAKOdM=\n"
                 f"AllowedIPs = 0.0.0.0/0, ::/0\n"
-                f"Endpoint = 186.246.34.150:31453\n"
+                f"Endpoint = 150.241.102.183:47499\n"
                 f"PersistentKeepalive = 25"
             )
             
@@ -423,7 +423,7 @@ def create_client():
             f.write(f"{next_ip}={name}|{privkey}|{target_user_id}|{target_user.get('phone','')}\n")
             
         run_docker_cmd("sh -c 'echo QqFJqUSQ+JmN81BO7d6pkawUydO1zl+NiiS7OCAKOdM= > /tmp/psk.key'")
-        run_docker_cmd(f"wg set awg0 peer {pubkey} preshared-key /tmp/psk.key allowed-ips {next_ip}/32")
+        run_docker_cmd(f"awg set awg0 peer {pubkey} preshared-key /tmp/psk.key allowed-ips {next_ip}/32")
         run_docker_cmd("rm -f /tmp/psk.key")
         run_docker_cmd(f"ip route add {next_ip}/32 dev awg0")
         
@@ -431,7 +431,7 @@ def create_client():
         _, eth_dev, _ = run_docker_cmd(r"sh -c 'ip route show | grep default | awk \"{print \$5}\"'")
         eth_dev = eth_dev.strip() if eth_dev.strip() else "eth0"
         run_docker_cmd(f"iptables -A FORWARD -i awg0 -o {eth_dev} -j ACCEPT")
-        run_docker_cmd(f"iptables -t nat -A POSTROUTING -s 10.8.0.0/24 -o {eth_dev} -j MASQUERADE")
+        run_docker_cmd(f"iptables -t nat -A POSTROUTING -s 10.8.0.0/24 -j MASQUERADE")
         
     return redirect(url_for('cabinet'))
 
@@ -505,7 +505,7 @@ def delete_client():
                 if not line.startswith(f"{ip}="): f.write(line)
         run_docker_cmd(f"ip route del {ip}/32 dev awg0")
         
-    run_docker_cmd(f"wg set awg0 peer {pubkey} remove")
+    run_docker_cmd(f"awg set awg0 peer {pubkey} remove")
     return redirect(url_for('cabinet'))
 
 @app.route('/cabinet/download/<ip>')

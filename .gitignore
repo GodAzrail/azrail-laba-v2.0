@@ -1,0 +1,7 @@
+venv/
+__pycache__/
+*.log
+*.sqlite3
+*.db
+custom_clients.txt
+traffic_history.json
