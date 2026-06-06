@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Личный кабинет VPN</title>
+    <style>
+        :root {
+            --bg: #060a12;
+            --card: #0d1527;
+            --border: #1b2640;
+            --text: #f1f5f9;
+            --muted: #64748b;
+            --accent: #38bdf8;
+            --success: #10b981;
+            --danger: #ef4444;
+        }
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            margin: 0; padding: 30px 20px;
+            -webkit-font-smoothing: antialiased;
+        }
+        .wrapper { max-width: 1200px; margin: 0 auto; }
+        
+        .top-nav { 
+            display: flex; justify-content: space-between; align-items: center; 
+            margin-bottom: 25px; background: var(--card); border: 1px solid var(--border); padding: 14px 24px; border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
+        h1 { font-size: 18px; margin: 0; color: var(--text); font-weight: 700; letter-spacing: 0.3px; }
+        .user-welcome { font-size: 13px; color: var(--muted); border-left: 1px solid var(--border); padding-left: 16px; height: 18px; display: flex; align-items: center; }
+        
+        .btn-nav { 
+            background: #4338ca; color: #e2e8f0; text-decoration: none; padding: 9px 16px; border-radius: 8px; 
+            font-size: 13px; font-weight: 600; transition: all 0.2s ease; display: inline-flex; align-items: center;
+        }
+        .btn-nav:hover { background: #4f46e5; color: #fff; }
+        .btn-logout { background: transparent !important; border: 1px solid var(--border); color: #94a3b8 !important; margin-left: 10px; }
+
+        .main-container {
+            display: grid;
+            grid-template-columns: 2.8fr 1.2fr;
+            gap: 20px;
+            align-items: start;
+        }
+
+        .list { display: flex; flex-direction: column; gap: 4px; }
+        .section-title { font-size: 14px; font-weight: 700; margin: 10px 0 5px 0; color: #fff; letter-spacing: 0.3px; }
+        
+        .btn-rename {
+            background: transparent; border: none; color: var(--muted); cursor: pointer;
+            padding: 0 4px; font-size: 14px; display: inline-flex; align-items: center;
+            transition: color 0.2s; margin-right: 4px;
+        }
+        .btn-rename:hover { color: var(--accent); }
+        
+        .client-row {
+            background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+            padding: 12px 20px; box-sizing: border-box; width: 100%;
+            display: grid; grid-template-columns: 2fr 1.2fr 1fr 1.5fr 1.8fr; align-items: center; gap: 15px;
+        }
+        
+        .cell { display: flex; flex-direction: column; justify-content: center; min-width: 0; }
+        .val { font-size: 14px; font-weight: 500; white-space: nowrap; }
+        .monospace { font-family: monospace; font-size: 13px; font-weight: 600; }
+        .name-container { display: flex; align-items: center; min-width: 0; }
+        .name { font-weight: 600; font-size: 15px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        
+        .status { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; }
+        .status-online { color: var(--success); }
+        .status-offline { color: var(--muted); }
+        .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+        .dot.active { background: var(--success); box-shadow: 0 0 8px var(--success); }
+        .dot.inactive { background: var(--muted); }
+
+        .traffic-box { display: flex; flex-direction: column; gap: 2px; font-size: 12px; font-family: monospace; }
+        .traffic-in { color: var(--success); }
+        .traffic-out { color: var(--accent); }
+
+        .actions { display: flex; gap: 8px; justify-content: flex-end; }
+        .btn-action { background: #1e293b; color: #fff; border: 1px solid var(--border); padding: 7px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; }
+        .btn-action:hover { border-color: var(--accent); color: var(--accent); }
+        .btn-qr { background: #f1f5f9; color: #0f172a; border: none; }
+        .btn-qr:hover { background: #fff; color: #000; }
+        .btn-download { background: var(--accent); color: var(--bg); border: none; }
+        .btn-download:hover { opacity: 0.9; color: var(--bg); }
+        
+        .btn-delete-framed {
+            background: #1e293b;
+            color: #ef4444;
+            border: 1px solid var(--border);
+            padding: 7px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
+        }
+        .btn-delete-framed:hover {
+            border-color: var(--danger);
+            background: rgba(239, 68, 68, 0.1);
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.2);
+        }
+        
+        .sidebar-box {
+            background: var(--card); border: 1px solid var(--border); padding: 22px 24px; border-radius: 12px;
+        }
+        .sidebar-title {
+            margin-top: 0; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 14px;
+        }
+
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(5, 7, 11, 0.85); backdrop-filter: blur(4px); justify-content: center; align-items: center; z-index: 100;
+        }
+        .modal-body { 
+            background: var(--card); padding: 24px; border-radius: 16px; text-align: center; 
+            color: var(--text); box-shadow: 0 10px 25px rgba(0,0,0,0.5); border: 1px solid var(--border); 
+        }
+        .modal-body img { width: 220px; height: 220px; display: block; margin-bottom: 12px; border-radius: 8px; }
+        .modal-text { font-size: 12px; color: #64748b; font-weight: 500; max-width: 220px; display: block; line-height: 1.4; text-align: center; }
+
+        @media (max-width: 900px) {
+            .main-container { grid-template-columns: 1fr !important; }
+            body { padding: 15px 3% !important; }
+            .top-nav { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; padding: 14px 4% !important; }
+            .client-row { display: flex !important; flex-direction: column !important; width: 100% !important; padding: 14px 4% !important; gap: 10px !important; }
+            .client-row .cell { display: flex !important; flex-direction: row !important; justify-content: space-between !important; align-items: center !important; width: 100% !important; border-bottom: 1px solid var(--border) !important; padding-bottom: 6px !important; }
+            .actions { width: 100% !important; justify-content: space-between !important; border-top: 1px dashed var(--border) !important; padding-top: 10px !important; margin-top: 5px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="top-nav">
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <h1>Личный кабинет VPN</h1>
+                <div class="user-welcome">
+                    Добро пожаловать, <span style="color:var(--accent); margin-left:4px; font-weight:600;">{{ user.username }}</span>
+                </div>
+            </div>
+            <div>
+                {% if user.role == "admin" %}<a href="/admin/stats" class="btn-nav" style="background:#0284c7; margin-right:8px;">📊 Статистика</a><a href="/admin/users" class="btn-nav">🛡️ В админку</a>{% endif %}
+                <a href="/logout" class="btn-nav btn-logout">Выйти ✕</a>
+            </div>
+        </div>
+
+        <div class="main-container">
+            
+            <div class="list">
+                <div class="section-title">Ваши активные подключения (Всего: {{ clients|length }})</div>
+
+                <div style="background: transparent; border: none; border-bottom: 1px dashed var(--border); padding: 0 0 20px 0; margin-bottom: 15px;">
+                    <form action="/cabinet/create" method="POST">
+                        <div style="display: flex; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 4px; align-items: center;">
+                            <div style="padding-left: 14px; color: var(--accent); font-size: 16px; font-weight: bold;">＋</div>
+                            <input type="text" name="name" placeholder="Название нового устройства (Phone, MacBook...)" required style="background: #111a2e; border: 1px solid var(--border); color: var(--text); padding: 9px 14px; font-size: 14px; outline: none; border-radius: 6px; margin: 0 10px 0 6px; flex: 1;">
+                            <button type="submit" style="background: var(--accent); color: var(--bg); border: none; padding: 10px 22px; border-radius: 7px; font-weight: 700; font-size: 13px; cursor: pointer;">Добавить</button>
+                        </div>
+                    </form>
+                </div>
+
+                {% for client in clients %}
+                    <div class="client-row">
+                        <div class="cell">
+                            <div class="name-container">
+                                <button type="button" class="btn-rename" onclick="openRenameModal('{{ client.ip }}', '{{ client.name }}')" title="Переименовать">✏️</button>
+                                <span class="name" style="font-size: 15px !important;">{{ client.name }}</span>
+                            </div>
+                            <span style="font-size: 11px !important; color: var(--accent); margin-top: 3px; display: block; opacity: 0.8;">
+                                👤 {% if username_map and client.user_id in username_map %}{{ username_map[client.user_id] }}{% elif all_users and client.user_id in all_users %}{{ all_users[client.user_id].username }}{% elif client.phone == '+79994426528' or not client.user_id %}Azrail{% else %}Пользователь{% endif %} ({% if client.phone %}{{ client.phone }}{% else %}+79994426528{% endif %})
+                            </span>
+                        </div>
+
+                        <div class="cell">
+                            <span class="val monospace" style="color: #94a3b8;">{{ client.ip }}</span>
+                        </div>
+
+                        <div class="cell">
+                            {% if client.active %}
+                                <span class="status status-online"><span class="dot active"></span>Онлайн</span>
+                            {% else %}
+                                <span class="status status-offline"><span class="dot inactive"></span>Офлайн</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="cell">
+                            <div class="traffic-box">
+                                <span class="traffic-in">📥 {{ client.rx }}</span>
+                                <span class="traffic-out">📤 {{ client.tx }}</span>
+                            </div>
+                        </div>
+
+                        <div class="actions">
+                            <div class="btn-action btn-qr" onclick="showQR('{{ client.qr }}')">QR</div>
+                            <a href="/cabinet/download/{{ client.ip }}" class="btn-action btn-download">Скачать</a>
+                            <form action="/cabinet/delete" method="POST" style="margin:0; display:inline;" onsubmit="return confirm('Удалить этот конфиг?');">
+                                <input type="hidden" name="ip" value="{{ client.ip }}">
+                                <input type="hidden" name="pubkey" value="{{ client.pubkey }}">
+                                <button type="submit" class="btn-delete-framed" title="Удалить">✕</button>
+                            </form>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 20px;">
+                <div class="sidebar-box">
+                    <h3 class="sidebar-title">Данные профиля</h3>
+                    <p style="font-size: 14px; margin: 8px 0; color: #cbd5e1;"><strong>Логин:</strong> {{ user.username }}</p>
+                    <p style="font-size: 14px; margin: 8px 0; color: #cbd5e1;"><strong>Телефон:</strong> {{ user.phone }}</p>
+                    <p style="font-size: 14px; margin: 8px 0; color: #cbd5e1;"><strong>Роль:</strong> {{ user.role|upper }}</p>
+                </div>
+                
+                <div class="sidebar-box">
+                    <h3 class="sidebar-title">Изменить телефон</h3>
+                    <form action="/profile/change_phone" method="POST">
+                        <input type="text" name="phone" value="{{ user.phone }}" required style="background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 10px 14px; border-radius: 8px; font-size: 14px; width: 100%; box-sizing: border-box; margin-bottom: 12px; outline: none;">
+                        <button type="submit" style="background: var(--accent); color: var(--bg); border: none; padding: 11px; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer; width: 100%;">Сохранить</button>
+                    </form>
+                </div>
+                
+                <div class="sidebar-box">
+                    <h3 class="sidebar-title">Сменить пароль</h3>
+                    <form action="/profile/change_password" method="POST">
+                        <input type="password" name="new_password" placeholder="Новый пароль" required style="background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 10px 14px; border-radius: 8px; font-size: 14px; width: 100%; box-sizing: border-box; margin-bottom: 12px; outline: none;">
+                        <button type="submit" style="background: var(--accent); color: var(--bg); border: none; padding: 11px; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer; width: 100%;">Обновить</button>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="qrModal" class="modal" onclick="this.style.display='none'">
+        <div class="modal-body" onclick="event.stopPropagation()">
+            <img id="qrImg" src="" alt="QR">
+            <span class="modal-text">Используйте меню Амнезии «Импорт из файла или QR-кода» для добавления профиля</span>
+        </div>
+    </div>
+
+    <div id="renameModal" class="modal" onclick="closeRenameModal()">
+        <div class="modal-body" onclick="event.stopPropagation()" style="width: 300px; text-align: left;">
+            <h3 style="margin-top: 0; color: var(--text);">Изменить имя</h3>
+            <form action="/cabinet/rename" method="POST" style="display:flex; flex-direction:column; gap:15px;">
+                <input type="hidden" name="ip" id="renameIp">
+                <input type="text" name="name" id="renameName" placeholder="Новое имя" required style="width:100%; box-sizing:border-box; padding:10px; border-radius:6px; border:1px solid var(--border); background:var(--bg); color:var(--text);">
+                <div style="display:flex; gap:10px; justify-content:flex-end;">
+                    <button type="button" class="btn-action" style="background:#1e293b; color:#fff;" onclick="closeRenameModal()">Отмена</button>
+                    <button type="submit" class="btn-action btn-download" style="padding: 8px 16px;">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function showQR(b64) {
+            document.getElementById('qrImg').src = 'data:image/png;base64,' + b64;
+            document.getElementById('qrModal').style.display = 'flex';
+        }
+        function openRenameModal(ip, currentName) {
+            document.getElementById('renameIp').value = ip;
+            document.getElementById('renameName').value = currentName;
+            document.getElementById('renameModal').style.display = 'flex';
+            document.getElementById('renameName').focus();
+        }
+        function closeRenameModal() {
+            document.getElementById('renameModal').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

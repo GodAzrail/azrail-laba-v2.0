@@ -1,0 +1,101 @@
+{
+  "1779376815": {
+    "username": "Azrail",
+    "phone": "+79994426528",
+    "password_hash": "5fd9d807bf6ca41a07570f55b315f4e2ed0951fff141a197957a6b2bebf1482d",
+    "role": "admin",
+    "created_at": 1779376815.862278,
+    "login_attempts": 0,
+    "blocked_until": 0,
+    "is_active": true,
+    "is_protected": true
+  },
+  "17793806408d24": {
+    "username": "six8xis",
+    "phone": "+79994405530",
+    "password_hash": "afb4f61bfa44ddc3a38b6ff7dcfbe11d7616f19c1f18347d9b4d58564073fcaa",
+    "role": "user",
+    "created_at": 1779380640.488252,
+    "login_attempts": 0,
+    "blocked_until": 0,
+    "is_active": true,
+    "is_protected": false
+  },
+  "1779413352ea98": {
+    "username": "Astir",
+    "phone": "+79676127547",
+    "password_hash": "72ab994fa2eb426c051ef59cad617750bfe06d7cf6311285ff79c19c32afd236",
+    "role": "user",
+    "created_at": 1779413352.8827505,
+    "login_attempts": 0,
+    "blocked_until": 0,
+    "is_active": true,
+    "is_protected": false
+  },
+  "17794231551a3f": {
+    "username": "VesNa85",
+    "phone": "+79232716006",
+    "password_hash": "52e5f641b391336236f9857a6b36175b0f835a04c899e9a16feb0ca86448f811",
+    "role": "user",
+    "created_at": 1779423155.1177356,
+    "login_attempts": 0,
+    "blocked_until": 0,
+    "is_active": true,
+    "is_protected": false
+  },
+  "1779431595d0bd": {
+    "username": "Glibiks",
+    "phone": "+79135390665",
+    "password_hash": "9d0456714813229847aec1401493df8f46789d503629897e6b2c25738a5c5d46",
+    "role": "user",
+    "created_at": 1779431595.4244437,
+    "login_attempts": 0,
+    "blocked_until": 0,
+    "is_active": true,
+    "is_protected": false
+  },
+  "17794320617a1e": {
+    "username": "Andrey",
+    "phone": "+79082141202",
+    "password_hash": "91b4d142823f7d20c5f08df69122de43f35f057a988d9619f6d3138485c9a203",
+    "role": "user",
+    "created_at": 1779432061.3289635,
+    "login_attempts": 0,
+    "blocked_until": 0,
+    "is_active": true,
+    "is_protected": false
+  },
+  "17794525849f6e": {
+    "username": "Nvvv",
+    "phone": "+79141031037",
+    "password_hash": "cc29eae72cfae16092a0bbc820c8555057b2596065845dbdd52b1bdaa635e227",
+    "role": "user",
+    "created_at": 1779452584.0945692,
+    "login_attempts": 0,
+    "blocked_until": 0,
+    "is_active": true,
+    "is_protected": false
+  },
+  "177945907910b3": {
+    "username": "Eva16",
+    "phone": "+79333381235",
+    "password_hash": "52e5f641b391336236f9857a6b36175b0f835a04c899e9a16feb0ca86448f811",
+    "role": "user",
+    "created_at": 1779459079.057527,
+    "login_attempts": 0,
+    "blocked_until": 0,
+    "is_active": true,
+    "is_protected": false
+  },
+  "1779470750b439": {
+    "username": "Admin",
+    "phone": "+79995555555",
+    "password_hash": "5fd9d807bf6ca41a07570f55b315f4e2ed0951fff141a197957a6b2bebf1482d",
+    "role": "user",
+    "created_at": 1779470750.8994107,
+    "login_attempts": 0,
+    "blocked_until": 0,
+    "is_active": true,
+    "is_protected": false
+  }
+}

@@ -1,0 +1,26 @@
+=== СТАРТ ПЕРЕИМЕНОВАНИЯ ===
+Получено: IP = 10.8.0.3, Новое имя = 'Client-31'
+Код чтения таблицы: 0
+ВНИМАНИЕ: Указанный IP не найден в файле clientsTable!
+Код записи в файл: 0
+Результат файла после записи:
+[
+    {
+        "clientId": "jrbv/QA13Aej/HYUSLmQa5AszPHSDZh/PYErLa7C6SQ=",
+        "userData": {
+            "clientName": "Client 0"
+        }
+    },
+    {
+        "clientId": "4NU+ovKMk9Mn23VJBDqPaV1RJ7J05CQgDiGV7n545m0=",
+        "userData": {
+            "clientName": "Client 1"
+        }
+    },
+    {
+        "clientId": "afN7Fk/eSyTapl7dLVobYgKgthK1uutfdiSCkanfSRk=",
+        "userData": {
+            "clientName": "Client 2"
+        }
+    }
+]

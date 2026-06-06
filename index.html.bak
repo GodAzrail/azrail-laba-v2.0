@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amnezia Dashboard - Инспекция</title>
+    <style>
+        :root { --bg: #0b0f17; --card: #141b27; --border: #232d3f; --text: #f1f5f9; --muted: #64748b; --accent: #38bdf8; --success: #10b981; --danger: #ef4444; }
+        body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px 15px; }
+        .wrapper { max-width: 900px; margin: 0 auto; }
+        .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 1px solid var(--border); padding-bottom: 15px; gap: 15px; }
+        h1 { font-size: 20px; margin: 0; font-weight: 700; }
+        .btn-lk { background: var(--accent); color: var(--bg); padding: 8px 16px; border-radius: 6px; font-weight: 700; text-decoration: none; font-size: 13px; white-space: nowrap; transition: opacity 0.2s; }
+        .btn-lk:hover { opacity: 0.9; }
+        .client-row { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 12px; display: grid; grid-template-columns: 2fr 1.2fr 1fr 1.2fr 1.2fr 1.5fr; align-items: center; gap: 15px; }
+        .cell { display: flex; flex-direction: column; min-width: 0; }
+        .cell-actions { display: flex; align-items: center; gap: 8px; justify-content: flex-end; }
+        .label { color: var(--muted); font-size: 10px; text-transform: uppercase; margin-bottom: 4px; font-weight: 600; }
+        .val { font-size: 14px; font-weight: 500; }
+        .monospace { font-family: monospace; font-size: 13px; }
+        .name { font-weight: 600; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .status-wrapper { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; }
+        .dot.active { background: var(--success); box-shadow: 0 0 8px var(--success); }
+        .dot.inactive { background: var(--muted); }
+        .text-active { color: var(--success); }
+        .text-inactive { color: var(--muted); }
+        .qr-trigger { background: var(--text); color: var(--bg); padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; text-align: center; }
+        .dl-link { border: 1px solid var(--border); color: var(--accent); padding: 5px 12px; border-radius: 6px; font-size: 12px; text-decoration: none; font-weight: 600; text-align: center; }
+        
+        /* Мобильная адаптивность */
+        @media (max-width: 768px) {
+            .top-nav { flex-direction: column; align-items: flex-start; gap: 12px; }
+            .btn-lk { width: 100%; box-sizing: border-box; text-align: center; padding: 10px; }
+            .client-row { grid-template-columns: 1fr 1fr; gap: 12px; padding: 14px; }
+            .client-row .cell:first-child { grid-column: 1 / -1; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+            .cell-actions { grid-column: 1 / -1; justify-content: stretch; margin-top: 5px; }
+            .qr-trigger, .dl-link { flex: 1; padding: 10px; font-size: 13px; }
+        }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5, 7, 11, 0.85); backdrop-filter: blur(4px); justify-content: center; align-items: center; z-index: 100; }
+        .modal-body { background: var(--card); padding: 24px; border-radius: 16px; text-align: center; border: 1px solid var(--border); width: 85%; max-width: 260px; }
+        .modal-body img { width: 100%; height: auto; border-radius: 8px; margin-bottom: 12px; max-width: 220px; }
+    </style>
+    <link rel="icon" type="image/png" href="/static/favicon.ico">
+</head>
+<body>
+    <div class="wrapper">
+        <div class="top-nav">
+            <div>
+                <h1>Система инспекции AmneziaWG</h1>
+                {% if debug_log %}<div style="color: var(--accent); font-size:13px; margin-top:4px;">{{ debug_log }}</div>{% endif %}
+            </div>
+            {% if is_authed %}
+                <a href="/cabinet" class="btn-lk">← Вернуться в Личный кабинет</a>
+            {% else %}
+                <a href="/" class="btn-lk">Вход в личный кабинет (ЛК) →</a>
+            {% endif %}
+        </div>
+
+        <div class="list">
+            {% for client in clients %}
+                <div class="client-row">
+                    <div class="cell">
+                        <span class="label">Устройство</span>
+                        <span class="name">👤 {{ client.name }}</span>
+                    </div>
+                    <div class="cell">
+                        <span class="label">Внутренний IP</span>
+                        <span class="val monospace" style="color: #94a3b8;">{{ client.ip }}</span>
+                    </div>
+                    <div class="cell">
+                        <span class="label">Статус</span>
+                        <div class="status-wrapper">
+                            <span class="dot {% if client.active %}active{% else %}inactive{% endif %}"></span>
+                            <span class="{% if client.active %}text-active{% else %}text-inactive{% endif %}">{% if client.active %}Онлайн{% else %}Офлайн{% endif %}</span>
+                        </div>
+                    </div>
+                    <div class="cell">
+                        <span class="label">Получено</span>
+                        <span class="val monospace text-active">📥 {{ client.rx }}</span>
+                    </div>
+                    <div class="cell">
+                        <span class="label">Отправлено</span>
+                        <span class="val monospace" style="color: var(--accent);">📤 {{ client.tx }}</span>
+                    </div>
+                    <div class="cell-actions">
+                        <div class="qr-trigger" onclick="showQR('{{ client.qr }}')">QR</div>
+                        <a href="/cabinet/download/{{ client.ip }}" class="dl-link">Скачать</a>
+                    </div>
+                </div>
+            {% else %}
+                <p style="color: var(--muted); text-align:center;">Конфигурации не найдены.</p>
+            {% endfor %}
+        </div>
+    </div>
+    <div id="qrModal" class="modal" onclick="this.style.display='none'"><div class="modal-body" onclick="event.stopPropagation()"><img id="qrImg" src="" alt="QR"></div></div>
+    <script>function showQR(b64) { document.getElementById('qrImg').src = 'data:image/png;base64,' + b64; document.getElementById('qrModal').style.display = 'flex'; }</script>
+</body>
+</html>

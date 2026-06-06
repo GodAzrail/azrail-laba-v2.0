@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Регистрация - Azrail-Laba</title>
+    <style>
+        :root {
+            --bg: #060a12; --card: #0d1527; --border: #1b2640;
+            --text: #f1f5f9; --muted: #64748b; --accent: #38bdf8; --danger: #ef4444;
+        }
+        body {
+            font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text);
+            display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; margin: 0;
+            padding: 15px; box-sizing: border-box;
+        }
+        .logo-container { margin-bottom: 20px; text-align: center; }
+        .logo-img { 
+            width: 340px; 
+            height: auto; 
+            display: block; 
+            margin: 0 auto; 
+            border: none !important; 
+            outline: none !important;
+            box-shadow: none !important;
+            filter: none !important;
+        }
+        
+        .register-card {
+            background: var(--card); border: 1px solid var(--border); padding: 35px 30px; border-radius: 16px;
+            width: 100%; max-width: 420px; box-shadow: 0 0 30px rgba(56, 189, 248, 0.1); text-align: center;
+            box-sizing: border-box;
+        }
+        
+        .form-group { margin-bottom: 15px; display: flex; flex-direction: column; text-align: left; }
+        label { font-size: 12px; color: var(--muted); text-transform: uppercase; margin-bottom: 6px; font-weight: 600; letter-spacing: 0.5px; }
+        input {
+            background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 11px 14px;
+            border-radius: 8px; font-size: 14px; transition: all 0.2s;
+        }
+        input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 8px rgba(56, 189, 248, 0.2); }
+        button {
+            background: var(--accent); color: var(--bg); border: none; padding: 14px; border-radius: 8px;
+            font-weight: 700; cursor: pointer; font-size: 15px; margin-top: 10px; width: 100%;
+        }
+        .flash-msg { background: rgba(239, 68, 68, 0.1); border: 1px solid var(--danger); color: var(--danger); padding: 10px; border-radius: 8px; font-size: 13px; margin-bottom: 15px; text-align: center;}
+        .footer-links { text-align: center; margin-top: 20px; font-size: 13px; color: var(--muted); }
+        .footer-links a { color: var(--accent); text-decoration: none; font-weight: 600; }
+        
+        @media (max-width: 480px) {
+            .logo-img { width: 75% !important; }
+        }
+    </style>
+    <link rel="icon" type="image/png" href="/static/favicon.ico">
+</head>
+<body>
+    <div class="logo-container">
+        <img src="/static/logo.png" alt="Azrail-Laba" class="logo-img" onerror="this.style.display='none'; document.getElementById('logo-fallback').style.display='block';">
+        <div id="logo-fallback" style="display:none; font-size:22px; font-weight:800; color:var(--text); letter-spacing:-0.5px;">
+            Azrail-<span style="color:var(--accent);">Laba</span>
+        </div>
+    </div>
+
+    <div class="register-card">
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}<div class="flash-msg">{{ message }}</div>{% endif %}
+        {% endwith %}
+
+        <form method="POST">
+            <div class="form-group">
+                <label>Логин (латиница и цифры)</label>
+                <input type="text" name="username" pattern="^[a-zA-Z0-9]{3,20}$" placeholder="john123" required>
+            </div>
+            <div class="form-group">
+                <label>Номер телефона</label>
+                <input type="text" name="phone" placeholder="+79001234567" required>
+            </div>
+            <div class="form-group">
+                <label>Пароль (мин. 6 символов)</label>
+                <input type="password" name="password" minlength="6" placeholder="••••••••" required>
+            </div>
+            <div class="form-group">
+                <label>Подтверждение пароля</label>
+                <input type="password" name="confirm_password" minlength="6" placeholder="••••••••" required>
+            </div>
+            <button type="submit">Создать аккаунт</button>
+        </form>
+        <div class="footer-links">Уже есть аккаунт? <a href="/">Войти</a></div>
+    </div>
+</body>
+</html>

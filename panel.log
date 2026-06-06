@@ -1,0 +1,31 @@
+nohup: ignoring input
+ * Serving Flask app 'app'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:80
+ * Running on http://186.246.34.150:80
+Press CTRL+C to quit
+5.189.194.245 - - [22/May/2026 20:24:50] "GET /admin/stats HTTP/1.1" 200 -
+5.189.194.245 - - [22/May/2026 20:25:07] "GET /cabinet HTTP/1.1" 200 -
+5.189.194.245 - - [22/May/2026 20:25:24] "GET /logout HTTP/1.1" 302 -
+5.189.194.245 - - [22/May/2026 20:25:24] "GET / HTTP/1.1" 200 -
+5.189.194.245 - - [22/May/2026 20:25:25] "GET /static/logo.png HTTP/1.1" 304 -
+5.189.194.245 - - [22/May/2026 20:25:25] "GET /static/favicon.ico HTTP/1.1" 304 -
+5.189.194.245 - - [22/May/2026 20:25:26] "GET /register HTTP/1.1" 200 -
+5.189.194.245 - - [22/May/2026 20:25:26] "GET /static/logo.png HTTP/1.1" 304 -
+5.189.194.245 - - [22/May/2026 20:25:50] "POST /register HTTP/1.1" 302 -
+5.189.194.245 - - [22/May/2026 20:25:52] "GET /cabinet HTTP/1.1" 200 -
+5.189.194.245 - - [22/May/2026 20:26:02] "POST /cabinet/create HTTP/1.1" 302 -
+5.189.194.245 - - [22/May/2026 20:26:04] "GET /cabinet HTTP/1.1" 200 -
+5.189.194.245 - - [22/May/2026 20:26:21] "POST /cabinet/delete HTTP/1.1" 302 -
+5.189.194.245 - - [22/May/2026 20:26:23] "GET /cabinet HTTP/1.1" 200 -
+5.189.194.245 - - [22/May/2026 20:26:24] "GET /logout HTTP/1.1" 302 -
+5.189.194.245 - - [22/May/2026 20:26:24] "GET / HTTP/1.1" 200 -
+5.189.194.245 - - [22/May/2026 20:26:24] "GET /static/logo.png HTTP/1.1" 304 -
+5.189.194.245 - - [22/May/2026 20:26:30] "POST / HTTP/1.1" 302 -
+5.189.194.245 - - [22/May/2026 20:26:31] "GET /cabinet HTTP/1.1" 200 -
+5.189.194.245 - - [22/May/2026 20:27:01] "GET /admin/users HTTP/1.1" 200 -
+5.189.194.245 - - [22/May/2026 20:27:10] "GET /cabinet HTTP/1.1" 200 -
+5.189.194.245 - - [22/May/2026 20:27:24] "GET /admin/stats HTTP/1.1" 200 -
+5.189.194.245 - - [22/May/2026 20:27:36] "GET /cabinet HTTP/1.1" 200 -

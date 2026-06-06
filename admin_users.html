@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Управление пользователями - Amnezia Dashboard</title>
+    <style>
+        :root {
+            --bg: #060a12; --card: #0d1527; --border: #1b2640; --text: #f1f5f9;
+            --muted: #64748b; --accent: #38bdf8; --success: #10b981; --danger: #ef4444;
+        }
+        body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 30px 20px; }
+        .wrapper { max-width: 1200px; margin: 0 auto; }
+        
+        .top-nav { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 30px; 
+            background: var(--card);
+            border: 1px solid var(--border);
+            padding: 14px 24px; 
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
+        h1 { font-size: 18px; margin: 0; font-weight: 700; letter-spacing: 0.3px; }
+        .btn-nav { 
+            background: #1e293b; 
+            color: #e2e8f0; 
+            text-decoration: none; 
+            padding: 9px 16px; 
+            border-radius: 8px; 
+            font-size: 13px; 
+            font-weight: 600; 
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+        }
+        .btn-nav:hover { background: #2d3748; color: #fff; }
+        .btn-back { background: #4338ca !important; box-shadow: 0 0 12px rgba(67, 56, 202, 0.2); }
+        .btn-back:hover { background: #4f46e5 !important; box-shadow: 0 0 16px rgba(67, 56, 202, 0.4); }
+
+        .flash-box { background: rgba(56, 189, 248, 0.1); border: 1px solid var(--accent); color: var(--accent); padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; }
+
+        .add-form { 
+            background: transparent; 
+            border: none;
+            border-bottom: 1px dashed var(--border);
+            padding: 0 0 20px 0; 
+            margin-bottom: 25px; 
+        }
+        .form-row { 
+            display: flex; 
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 4px;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+        .form-prefix { padding-left: 14px; color: var(--accent); font-size: 16px; font-weight: bold; }
+        .form-row input, .form-row select { 
+            background: #111a2e !important; 
+            border: 1px solid var(--border) !important; 
+            color: var(--text) !important; 
+            padding: 9px 14px !important; 
+            font-size: 14px !important; 
+            outline: none !important;
+            border-radius: 6px !important;
+            margin: 0 5px;
+            transition: all 0.2s ease;
+        }
+        .form-row input:focus, .form-row select:focus { 
+            border-color: var(--accent) !important; 
+            background: #15223b !important;
+            box-shadow: 0 0 12px rgba(56, 189, 248, 0.2) !important;
+        }
+        .form-row input { flex: 1; }
+        .form-row input::placeholder { color: #4b5563 !important; }
+        .form-row button { 
+            background: var(--accent) !important; 
+            color: var(--bg) !important; 
+            border: none !important; 
+            padding: 10px 22px !important; 
+            border-radius: 7px !important; 
+            font-weight: 700 !important; 
+            font-size: 13px !important;
+            cursor: pointer !important; 
+            transition: opacity 0.2s ease !important;
+            margin-left: 5px;
+        }
+        .form-row button:hover { opacity: 0.9 !important; }
+
+        .list-header {
+            display: grid;
+            grid-template-columns: 2fr 1.2fr 1.2fr 2.5fr;
+            padding: 0 16px 10px 16px;
+            color: var(--muted);
+            font-size: 11px;
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        .client-row { 
+            background: var(--card); 
+            border: 1px solid var(--border); 
+            border-radius: 10px; 
+            padding: 12px 16px; 
+            margin-bottom: 8px; 
+            display: grid; 
+            grid-template-columns: 2fr 1.2fr 1.2fr 2.5fr; 
+            align-items: center; 
+            gap: 15px;
+            line-height: 1.2;
+        }
+        .cell { display: flex; flex-direction: column; min-width: 0; }
+        .val { font-size: 14px; font-weight: 500; }
+        .username { font-weight: 600; color: var(--text); font-size: 15px; }
+        .phone-val { color: var(--accent); font-size: 13px; margin-top: 2px; }
+        .monospace { font-family: monospace; font-size: 13px; color: #94a3b8; }
+        
+        .role-badge { display: inline-block; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; width: fit-content; }
+        .role-admin { background: rgba(67, 56, 202, 0.2); color: #818cf8; border: 1px solid rgba(67, 56, 202, 0.4); }
+        .role-user { background: rgba(56, 189, 248, 0.1); color: var(--accent); border: 1px solid rgba(56, 189, 248, 0.2); }
+
+        .cell-actions { display: flex; gap: 6px; justify-content: flex-end; align-items: center; }
+        .btn-action { 
+            background: #1e293b; 
+            color: #fff; 
+            border: 1px solid var(--border); 
+            padding: 6px 12px; 
+            border-radius: 6px; 
+            font-size: 12px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            text-decoration: none;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .btn-action:hover { border-color: var(--accent); color: var(--accent); }
+        .btn-configs {
+            background: rgba(56, 189, 248, 0.1);
+            color: var(--accent);
+            border-color: rgba(56, 189, 248, 0.2);
+        }
+        .btn-configs:hover {
+            background: var(--accent);
+            color: var(--bg);
+        }
+        .btn-del { background: transparent; color: var(--muted); }
+        .btn-del:hover { border-color: var(--danger); color: var(--danger); background: rgba(239, 68, 68, 0.05); }
+
+        @media (max-width: 768px) {
+            body { padding: 15px 3% !important; }
+            .top-nav { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; padding: 14px 4% !important; }
+            .list-header { display: none !important; }
+            .form-row { flex-direction: column !important; padding: 10px !important; gap: 8px !important; }
+            .form-row input, .form-row select, .form-row button { width: 100% !important; margin: 0 !important; box-sizing: border-box; }
+            .form-prefix { display: none; }
+            
+            .client-row {
+                display: flex !important; flex-direction: column !important; width: 100% !important; padding: 14px 4% !important; gap: 10px !important;
+            }
+            .client-row .cell {
+                display: flex !important; flex-direction: row !important; justify-content: space-between !important; align-items: center !important; width: 100% !important; border-bottom: 1px solid var(--border) !important; padding-bottom: 6px !important;
+            }
+            .client-row .cell::before {
+                content: attr(data-label); color: var(--muted); font-size: 10px; text-transform: uppercase; font-weight: 600;
+            }
+            .client-row .val { text-align: right !important; }
+            .cell-actions { width: 100% !important; justify-content: space-between !important; border-top: 1px dashed var(--border) !important; padding-top: 10px !important; margin-top: 5px; gap: 6px; }
+            .cell-actions form, .cell-actions a { flex: 1; text-align: center; }
+            .cell-actions .btn-action { display: block; width: 100%; box-sizing: border-box; }
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="top-nav">
+            <h1>🛡️ Управление пользователями системы</h1>
+            <div>
+                <a href="/cabinet" class="btn-nav btn-back">← В кабинет</a>
+            </div>
+        </div>
+
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}<div class="flash-box">{% for m in messages %}{{ m }}<br>{% endfor %}</div>{% endif %}
+        {% endwith %}
+
+        <div class="add-form">
+            <form action="/admin/users/create" method="POST">
+                <div class="form-row">
+                    <div class="form-prefix">＋</div>
+                    <input type="text" name="username" placeholder="Логин нового пользователя" required>
+                    <input type="text" name="phone" placeholder="Номер телефона (+7...)" required>
+                    <input type="password" name="password" placeholder="Пароль" minlength="6" required>
+                    <select name="role">
+                        <option value="user">Пользователь (User)</option>
+                        <option value="admin">Администратор (Admin)</option>
+                    </select>
+                    <button type="submit">Создать</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="list">
+            <div class="list-header">
+                <div>Пользователь</div>
+                <div>Роль</div>
+                <div>Устройств</div>
+                <div style="text-align: right; padding-right: 25px;">Действия</div>
+            </div>
+
+            {% for uid, u in users.items() %}
+                <div class="client-row">
+                    <div class="cell" data-label="Пользователь">
+                        <span class="username">👤 {{ u.username }}</span>
+                        <span class="phone-val">{{ u.phone }}</span>
+                    </div>
+                    <div class="cell" data-label="Роль">
+                        <span class="role-badge {% if u.role == 'admin' %}role-admin{% else %}role-user{% endif %}">
+                            {{ u.role }}
+                        </span>
+                    </div>
+                    <div class="cell" data-label="Устройств">
+                        <span class="val monospace" style="color: #94a3b8; font-weight: 600;">
+                            {% if config_counts is defined %}
+                                {{ config_counts.get(uid, 0) }} шт.
+                            {% else %}
+                                0 шт.
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="cell-actions">
+                        <a href="/admin/user/clients/{{ uid }}" class="btn-action btn-configs">Конфиги</a>
+                        <a href="/admin/users/login_as/{{ uid }}" class="btn-action">Войти</a>
+                        {% if uid|string != session.get('user_id')|string %}
+                            <form action="/admin/users/delete/{{ uid }}" method="POST" style="display:inline;" onsubmit="return confirm('Удалить пользователя {{ u.username }} и все его VPN-устройства?')">
+                                <button type="submit" class="btn-action btn-del">✕ Удалить</button>
+                            </form>
+                        {% else %}
+                            <span style="font-size: 11px; color: var(--muted); align-self: center; padding: 6px 12px; white-space: nowrap;">Это Вы</span>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>
