@@ -1,55 +1,43 @@
-# Azrail-Laba VPN Panel
-Легкая веб-панель для управления AmneziaWG в Docker.
-## Быстрый старт
-```bash
-git clone [https://github.com/GodAzrail/Azrail-Laba.git](https://github.com/GodAzrail/Azrail-Laba.git) /opt/Azrail-Laba
-cd /opt/Azrail-Laba
-python3 -m venv venv
-venv/bin/pip install -r requirements.txt
-sysctl -w net.ipv4.ip_forward=1
-docker exec -i amnezia-awg2 iptables -t nat -A POSTROUTING -s 10.8.0.0/24 -j MASQUERADE
-nohup /opt/Azrail-Laba/venv/bin/python /opt/Azrail-Laba/app.py > /opt/Azrail-Laba/panel.log 2>&1 &
+Azrail-Laba VPN Panel
+Панель управления сетевой инфраструктурой и VPN-клиентами (AmneziaWG).
 
-
-
-Azrail-Laba v2.0
-Панель управления сетевой инфраструктурой и VPN-клиентами.
-
-Требования
-Ubuntu 22.04+ (рекомендуется)
-
-Python 3.10+
-
-Установленный пакет python3-venv
-
-Быстрая установка
-Клонирование репозитория:
-
+Быстрый старт
+1. Клонирование репозитория
 Bash
 git clone https://github.com/GodAzrail/azrail-laba-v2.0.git /opt/Azrail-Laba
 cd /opt/Azrail-Laba
-Настройка виртуального окружения:
-
+2. Настройка окружения
 Bash
+# Установка необходимых системных пакетов (если не установлены)
+sudo apt update && sudo apt install -y python3-venv
+
+# Создание и активация виртуального окружения
 python3 -m venv venv
 source venv/bin/activate
-Установка зависимостей:
 
-Bash
+# Установка зависимостей
 pip install --upgrade pip
 pip install -r requirements.txt
-Подготовка сети (требуется для работы VPN-панели):
-
+3. Настройка сети и запуск
 Bash
-sysctl -w net.ipv4.ip_forward=1
-Запуск:
+# Включение пересылки трафика
+sudo sysctl -w net.ipv4.ip_forward=1
 
-Bash
-# Запуск в фоновом режиме
+# (Опционально) Настройка NAT для Docker-контейнера (если используется AmneziaWG)
+# docker exec -i amnezia-awg2 iptables -t nat -A POSTROUTING -s 10.8.0.0/24 -j MASQUERADE
+
+# Запуск панели в фоновом режиме
 nohup ./venv/bin/python app.py > panel.log 2>&1 &
+Требования
+ОС: Ubuntu 22.04+
+
+Python: 3.10+
+
+Права: Для работы на 80-м порту требуются права root.
+
 Дополнительная информация
-Логи: Все записи о работе панели сохраняются в panel.log.
+Логи: Все записи о работе панели сохраняются в файл panel.log.
 
-Данные: Файлы users.json и traffic_history.json создаются автоматически или переносятся вручную после первого запуска.
+Данные: Файлы users.json, custom_clients.txt и traffic_history.json создаются автоматически или переносятся с предыдущих инстансов вручную.
 
-Порт: Приложение по умолчанию использует 80-й порт (требуются права root).
+Безопасность: Не забывайте настраивать API-KEY для взаимодействия с внешними системами
