@@ -8,7 +8,9 @@ import json
 import hashlib
 import qrcode
 import psutil
-from flask import Flask, render_template, request, redirect, url_for, Response, session, make_response, flash
+from flask import Flask, render_template, request, redirect, url_for, Response, session, make_response, flash, jsonify
+from datetime import datetime
+from functools import wraps
 
 app = Flask(__name__)
 app.secret_key = "SUPER_SECRET_SESSION_KEY_FOR_AMNEZIA_PANEL_2026"
@@ -17,12 +19,39 @@ PASSWORD = "220823"
 CONTAINER = "amnezia-awg2"
 CONF_PATH = "/opt/amnezia/awg/awg0.conf"
 
-DB_DIR = "/opt/my-amnezia-panel"
+DB_DIR = "/opt/Azrail-Laba"
 LOCAL_DB_PATH = os.path.join(DB_DIR, "custom_clients.txt")
 USERS_FILE = os.path.join(DB_DIR, "users.json")
 HISTORY_FILE = os.path.join(DB_DIR, "traffic_history.json")
+NEWS_FILE = os.path.join(DB_DIR, "news.json")
 
 os.makedirs(DB_DIR, exist_ok=True)
+
+# ============ РЕАЛЬНЫЕ ПАРАМЕТРЫ СЕРВЕРА ============
+SERVER_PUBLIC_KEY = "j6dPo7y80Z78p27BuxvyW3uLRIL2Pf1D81VN1pCosD4="
+SERVER_ENDPOINT = "150.241.102.183:30104"
+SERVER_PSK = "oJwfFzzKL8M5l5H93II59RBKq66op5pXZ8AT6CEZy6U="
+SERVER_SUBNET = "10.8.1"  # Правильная подсеть сервера
+
+# Amnezia параметры из реального конфига
+AMNEZIA_PARAMS = {
+    "Jc": "5",
+    "Jmin": "10",
+    "Jmax": "50",
+    "S1": "130",
+    "S2": "131",
+    "S3": "48",
+    "S4": "18",
+    "H1": "1749849187-1777574382",
+    "H2": "1862607108-2067790809",
+    "H3": "2070916378-2118585698",
+    "H4": "2144561861-2146132410",
+    "I1": "",
+    "I2": "",
+    "I3": "",
+    "I4": "",
+    "I5": ""
+}
 
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
@@ -74,7 +103,6 @@ def clean_phone(phone_str):
     return "+" + digits
 
 def login_required(f):
-    from functools import wraps
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'user_id' not in session:
@@ -88,7 +116,6 @@ def login_required(f):
     return decorated_function
 
 def admin_required(f):
-    from functools import wraps
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'user_id' not in session:
@@ -140,6 +167,53 @@ def format_handshake(t_str):
     elif diff < 3600: return f"{diff//60} мин назад"
     else: return f"{diff//3600} ч назад"
 
+def generate_client_config(ip, privkey_display, client_psk):
+    """Генерирует РАБОЧИЙ конфиг клиента"""
+    # Формируем Interface блок
+    interface_lines = [
+        "[Interface]",
+        f"Address = {ip}/32",
+        "DNS = 1.1.1.1, 1.0.0.1",
+        f"PrivateKey = {privkey_display}",
+        f"Jc = {AMNEZIA_PARAMS['Jc']}",
+        f"Jmin = {AMNEZIA_PARAMS['Jmin']}",
+        f"Jmax = {AMNEZIA_PARAMS['Jmax']}",
+        f"S1 = {AMNEZIA_PARAMS['S1']}",
+        f"S2 = {AMNEZIA_PARAMS['S2']}",
+        f"S3 = {AMNEZIA_PARAMS['S3']}",
+        f"S4 = {AMNEZIA_PARAMS['S4']}",
+        f"H1 = {AMNEZIA_PARAMS['H1']}",
+        f"H2 = {AMNEZIA_PARAMS['H2']}",
+        f"H3 = {AMNEZIA_PARAMS['H3']}",
+        f"H4 = {AMNEZIA_PARAMS['H4']}",
+    ]
+    
+    # Добавляем I параметры только если они не пустые
+    if AMNEZIA_PARAMS.get('I1'):
+        interface_lines.append(f"I1 = {AMNEZIA_PARAMS['I1']}")
+    if AMNEZIA_PARAMS.get('I2'):
+        interface_lines.append(f"I2 = {AMNEZIA_PARAMS['I2']}")
+    if AMNEZIA_PARAMS.get('I3'):
+        interface_lines.append(f"I3 = {AMNEZIA_PARAMS['I3']}")
+    if AMNEZIA_PARAMS.get('I4'):
+        interface_lines.append(f"I4 = {AMNEZIA_PARAMS['I4']}")
+    if AMNEZIA_PARAMS.get('I5'):
+        interface_lines.append(f"I5 = {AMNEZIA_PARAMS['I5']}")
+    
+    interface_lines.append("")  # Пустая строка для разделения
+    
+    # Формируем Peer блок
+    peer_lines = [
+        "[Peer]",
+        f"PublicKey = {SERVER_PUBLIC_KEY}",
+        f"PresharedKey = {client_psk if client_psk else SERVER_PSK}",
+        "AllowedIPs = 0.0.0.0/0, ::/0",
+        f"Endpoint = {SERVER_ENDPOINT}",
+        "PersistentKeepalive = 25"
+    ]
+    
+    return "\n".join(interface_lines + peer_lines)
+
 def get_amnezia_data():
     _, content, _ = run_docker_cmd(f"cat {CONF_PATH}")
     _, wg_dump, _ = run_docker_cmd("wg show awg0 dump")
@@ -157,7 +231,7 @@ def get_amnezia_data():
                     'tx': format_bytes(parts[6].strip())
                 }
                 
-    name_map, priv_key_map, user_id_map, phone_map = {}, {}, {}, {}
+    name_map, priv_key_map, user_id_map, phone_map, psk_map = {}, {}, {}, {}, {}
     
     if os.path.exists(LOCAL_DB_PATH):
         with open(LOCAL_DB_PATH, 'r', encoding='utf-8') as f:
@@ -170,15 +244,8 @@ def get_amnezia_data():
                     priv_key_map[ip] = parts[1] if len(parts) > 1 else ""
                     user_id_map[ip] = parts[2] if len(parts) > 2 else ""
                     phone_map[ip] = parts[3] if len(parts) > 3 else ""
-                
-    headers = {}
-    if content:
-        for line in content.splitlines():
-            if line.startswith("[Peer]"): break
-            if "=" in line:
-                k, v = line.split("=", 1)
-                headers[k.strip()] = v.strip()
-
+                    psk_map[ip] = parts[4] if len(parts) > 4 else ""
+    
     clients = []
     if content:
         peers = content.split("[Peer]")
@@ -192,11 +259,13 @@ def get_amnezia_data():
             pubkey = peer_info.get('PublicKey', '').strip()
             allowed_ips = peer_info.get('AllowedIPs', '').strip()
             ip_clean = allowed_ips.split("/")[0] if allowed_ips else ""
+            peer_psk = peer_info.get('PresharedKey', '').strip()
             
             client_name = name_map.get(ip_clean, f"Client-{idx}")
             privkey_display = priv_key_map.get(ip_clean, "")
             associated_user_id = user_id_map.get(ip_clean, "")
             associated_phone = phone_map.get(ip_clean, "")
+            client_psk = psk_map.get(ip_clean, peer_psk)
             
             stats = wg_stats.get(pubkey, {'handshake': 'никогда', 'rx': '0 Б', 'tx': '0 Б', 'handshake_raw': '0'})
             is_active = False
@@ -206,31 +275,8 @@ def get_amnezia_data():
                     is_active = True
             except: pass
             
-            client_conf = (
-                f"[Interface]\n"
-                f"Address = {allowed_ips if '/' in allowed_ips else allowed_ips + '/32'}\n"
-                f"DNS = 1.1.1.1, 1.0.0.1\n"
-                f"PrivateKey = {privkey_display if privkey_display else '(Нет ключа)'}\n"
-                f"Jc = {headers.get('Jc', headers.get('JC', '5'))}\n"
-                f"Jmin = {headers.get('Jmin', headers.get('J1', '10'))}\n"
-                f"Jmax = {headers.get('Jmax', headers.get('J2', '50'))}\n"
-                f"S1 = {headers.get('S1', '148')}\n"
-                f"S2 = {headers.get('S2', '125')}\n"
-                f"S3 = {headers.get('S3', '51')}\n"
-                f"S4 = {headers.get('S4', '12')}\n"
-                f"H1 = {headers.get('H1', '1874358316-2083736359')}\n"
-                f"H2 = {headers.get('H2', '2142448686-2142474412')}\n"
-                f"H3 = {headers.get('H3', '2146769671-2146852948')}\n"
-                f"H4 = {headers.get('H4', '2146884680-2147421900')}\n"
-                f"I1 = {headers.get('I1', '<r 2><b 0x858000010001000000000669636c6f756403636f6d0000010001c00c000100010000105a00044d583737>')}\n"
-                f"I2 = \nI3 = \nI4 = \nI5 = \n\n"
-                f"[Peer]\n"
-                f"PublicKey = iljbNMHAOTnu13oei9BRPBZwF3b+o8snYF9C1O1sD3c=\n"
-                f"PresharedKey = QqFJqUSQ+JmN81BO7d6pkawUydO1zl+NiiS7OCAKOdM=\n"
-                f"AllowedIPs = 0.0.0.0/0, ::/0\n"
-                f"Endpoint = 150.241.102.183:47499\n"
-                f"PersistentKeepalive = 25"
-            )
+            # Генерируем РАБОЧИЙ конфиг
+            client_conf = generate_client_config(ip_clean, privkey_display, client_psk)
             
             img = qrcode.make(client_conf)
             buf = io.BytesIO()
@@ -397,7 +443,9 @@ def create_client():
     current_user = users.get(session['user_id'])
     
     name = request.form.get('name', '').strip()
-    if not name: return redirect(url_for('cabinet'))
+    if not name: 
+        flash("Имя клиента не может быть пустым")
+        return redirect(url_for('cabinet'))
     
     target_user_id = session['user_id']
     if current_user['role'] == 'admin' and request.form.get('target_user_id'):
@@ -405,33 +453,50 @@ def create_client():
         
     target_user = users.get(target_user_id, current_user)
     privkey, pubkey = generate_wg_keys_via_docker()
+    
+    # Генерируем уникальный PSK для клиента
+    _, psk, _ = run_docker_cmd("awg genpsk")
+    psk = psk.strip()
+    
     clients = get_amnezia_data()
     used_ips = [c['ip'] for c in clients]
     
+    # Используем правильную подсеть 10.8.1.x
     next_ip = ""
     for i in range(3, 254):
-        candidate = f"10.8.0.{i}"
+        candidate = f"{SERVER_SUBNET}.{i}"
         if candidate not in used_ips:
             next_ip = candidate
             break
             
+    if not next_ip:
+        flash("Нет свободных IP адресов")
+        return redirect(url_for('cabinet'))
+    
     if next_ip and pubkey and privkey:
-        new_peer = f"\n[Peer]\nPublicKey = {pubkey}\nPresharedKey = QqFJqUSQ+JmN81BO7d6pkawUydO1zl+NiiS7OCAKOdM=\nAllowedIPs = {next_ip}/32\n"
+        # Временно сохраняем PSK
+        write_docker_file("/tmp/client_psk.key", psk)
+        
+        new_peer = f"\n[Peer]\nPublicKey = {pubkey}\nPresharedKey = {psk}\nAllowedIPs = {next_ip}/32\n"
         append_docker_file(CONF_PATH, new_peer)
         
+        # Сохраняем данные клиента вместе с PSK
         with open(LOCAL_DB_PATH, 'a', encoding='utf-8') as f:
-            f.write(f"{next_ip}={name}|{privkey}|{target_user_id}|{target_user.get('phone','')}\n")
-            
-        run_docker_cmd("sh -c 'echo QqFJqUSQ+JmN81BO7d6pkawUydO1zl+NiiS7OCAKOdM= > /tmp/psk.key'")
-        run_docker_cmd(f"awg set awg0 peer {pubkey} preshared-key /tmp/psk.key allowed-ips {next_ip}/32")
-        run_docker_cmd("rm -f /tmp/psk.key")
+            f.write(f"{next_ip}={name}|{privkey}|{target_user_id}|{target_user.get('phone','')}|{psk}\n")
+        
+        # Применяем настройки
+        run_docker_cmd(f"awg set awg0 peer {pubkey} preshared-key /tmp/client_psk.key allowed-ips {next_ip}/32")
+        run_docker_cmd("rm -f /tmp/client_psk.key")
         run_docker_cmd(f"ip route add {next_ip}/32 dev awg0")
         
+        # Настройка маршрутизации
         run_docker_cmd("sysctl -w net.ipv4.ip_forward=1")
         _, eth_dev, _ = run_docker_cmd(r"sh -c 'ip route show | grep default | awk \"{print \$5}\"'")
         eth_dev = eth_dev.strip() if eth_dev.strip() else "eth0"
         run_docker_cmd(f"iptables -A FORWARD -i awg0 -o {eth_dev} -j ACCEPT")
-        run_docker_cmd(f"iptables -t nat -A POSTROUTING -s 10.8.0.0/24 -j MASQUERADE")
+        run_docker_cmd(f"iptables -t nat -A POSTROUTING -s {SERVER_SUBNET}.0/24 -j MASQUERADE")
+        
+        flash(f"Клиент {name} успешно создан с IP {next_ip}")
         
     return redirect(url_for('cabinet'))
 
@@ -464,13 +529,14 @@ def rename_client():
                 privkey = parts[1] if len(parts) > 1 else ""
                 uid = parts[2] if len(parts) > 2 else session['user_id']
                 phone = parts[3] if len(parts) > 3 else current_user.get('phone', '')
-                f.write(f"{ip}={new_name}|{privkey}|{uid}|{phone}\n")
+                psk = parts[4] if len(parts) > 4 else ""
+                f.write(f"{ip}={new_name}|{privkey}|{uid}|{phone}|{psk}\n")
             else:
                 f.write(line)
                 
     if not found:
         with open(LOCAL_DB_PATH, 'a', encoding='utf-8') as f:
-            f.write(f"{ip}={new_name}||{session['user_id']}|{current_user.get('phone','')}\n")
+            f.write(f"{ip}={new_name}||{session['user_id']}|{current_user.get('phone','')}|\n")
     return redirect(url_for('cabinet'))
 
 @app.route('/cabinet/delete', methods=['POST'])
@@ -506,6 +572,7 @@ def delete_client():
         run_docker_cmd(f"ip route del {ip}/32 dev awg0")
         
     run_docker_cmd(f"awg set awg0 peer {pubkey} remove")
+    flash(f"Клиент {target_client['name']} удален")
     return redirect(url_for('cabinet'))
 
 @app.route('/cabinet/download/<ip>')
@@ -630,7 +697,7 @@ def view_user_clients(user_id):
     user = users.get(user_id)
     if not user: return "Пользователь не найден", 404
     clients = [c for c in get_amnezia_data() if c['user_id'] == user_id]
-    return render_template('index.html', clients=clients, debug_log=f"Конфигурации пользователя: {user['username']}", is_authed=True)
+    return render_template('user_clients.html', clients=clients, target_user=user, is_authed=True)
 
 @app.route('/admin/stats')
 @admin_required
@@ -671,5 +738,83 @@ def admin_stats():
 
     return render_template('stats.html', total_clients=total_clients, active_clients=active_clients, sys_stats=sys_stats, traffic_history=history_data)
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=80)
+def load_news():
+    try:
+        if not os.path.exists(NEWS_FILE):
+            return {"news": []}
+        with open(NEWS_FILE, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except Exception as e:
+        print(f"Error loading news: {e}")
+        return {"news": []}
+
+def save_news(data):
+    with open(NEWS_FILE, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+@app.route('/news')
+def get_news():
+    try:
+        data = load_news()
+        active_news = [n for n in data.get('news', []) if n.get('active', True)]
+        return jsonify(active_news)
+    except Exception as e:
+        print(f"Error in /news: {e}")
+        return jsonify([])
+
+@app.route('/admin/news', methods=['GET', 'POST'])
+def admin_news():
+    if 'user_id' not in session:
+        return redirect('/')
+    
+    all_users = load_users()
+    user = all_users.get(session['user_id'])
+    if not user or user.get('role') != 'admin':
+        flash('Доступ запрещен')
+        return redirect('/cabinet')
+    
+    if request.method == 'POST':
+        action = request.form.get('action')
+        data = load_news()
+        
+        if action == 'add':
+            new_news = {
+                'id': str(int(datetime.now().timestamp())),
+                'title': request.form.get('title'),
+                'content': request.form.get('content'),
+                'date': datetime.now().strftime('%Y-%m-%d'),
+                'type': request.form.get('type', 'info'),
+                'active': True
+            }
+            data['news'].insert(0, new_news)
+            save_news(data)
+            flash('Новость добавлена!')
+        
+        elif action == 'delete':
+            news_id = request.form.get('news_id')
+            data['news'] = [n for n in data['news'] if n['id'] != news_id]
+            save_news(data)
+            flash('Новость удалена!')
+        
+        elif action == 'toggle':
+            news_id = request.form.get('news_id')
+            for n in data['news']:
+                if n['id'] == news_id:
+                    n['active'] = not n.get('active', True)
+                    break
+            save_news(data)
+            flash('Статус новости изменен!')
+        
+        return redirect('/admin/news')
+    
+    data = load_news()
+    return render_template('admin_news.html', news=data.get('news', []))
+
+@app.context_processor
+def inject_user():
+    if 'user_id' in session:
+        return dict(user=load_users().get(session['user_id']))
+    return dict(user=None)
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=80, debug=False)

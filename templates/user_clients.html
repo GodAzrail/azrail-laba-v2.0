@@ -1,178 +1,26 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Конфигурации пользователя - Amnezia Dashboard</title>
-    <style>
-        :root {
-            --bg: #060a12; --card: #0d1527; --border: #1b2640; --text: #f1f5f9;
-            --muted: #64748b; --accent: #38bdf8; --success: #10b981; --danger: #ef4444;
-        }
-        body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 30px 20px; }
-        .wrapper { max-width: 1200px; margin: 0 auto; }
-        
-        /* Фирменная монолитная шапка */
-        .top-nav { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            margin-bottom: 30px; 
-            background: var(--card);
-            border: 1px solid var(--border);
-            padding: 14px 24px; 
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-        }
-        .brand-section { display: flex; align-items: center; gap: 16px; }
-        h1 { font-size: 18px; margin: 0; font-weight: 700; letter-spacing: 0.3px; }
-        .user-welcome { font-size: 13px; color: var(--muted); border-left: 1px solid var(--border); padding-left: 16px; height: 18px; display: flex; align-items: center; }
-        .user-badge { font-weight: 600; color: var(--accent); margin-left: 4px; }
-        
-        .btn-nav { 
-            background: #1e293b; 
-            color: #e2e8f0; 
-            text-decoration: none; 
-            padding: 9px 16px; 
-            border-radius: 8px; 
-            font-size: 13px; 
-            font-weight: 600; 
-            transition: all 0.2s ease;
-            display: inline-flex;
-            align-items: center;
-        }
-        .btn-nav:hover { background: #2d3748; color: #fff; }
-        .btn-back { background: #4338ca !important; box-shadow: 0 0 12px rgba(67, 56, 202, 0.2); }
-        .btn-back:hover { background: #4f46e5 !important; box-shadow: 0 0 16px rgba(67, 56, 202, 0.4); }
-
-        /* Стилизация списка устройств под новый компактный стиль ЛК */
-        .client-row { 
-            background: var(--card); 
-            border: 1px solid var(--border); 
-            border-radius: 10px; 
-            padding: 12px 20px; 
-            margin-bottom: 10px; 
-            display: grid; 
-            grid-template-columns: 2fr 1.2fr 1fr 1.5fr 2fr; 
-            align-items: center; 
-            gap: 15px;
-        }
-        .cell { display: flex; flex-direction: column; }
-        .label { font-size: 10px; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; font-weight: 600; letter-spacing: 0.5px; }
-        
-        .name-container { display: flex; align-items: center; justify-content: flex-start; gap: 0; }
-        .name { font-size: 15px !important; font-weight: 600; color: var(--text); }
-        .sub-text { font-size: 11px !important; color: var(--accent); margin-top: 3px; display: block; opacity: 0.9; }
-        
-        .val { font-size: 14px; font-weight: 500; }
-        .monospace { font-family: monospace; color: #cbd5e1; }
-        
-        .status { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; }
-        .status-online { color: var(--success); }
-        .status-offline { color: var(--muted); }
-        .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
-        .dot-online { background: var(--success); box-shadow: 0 0 8px var(--success); }
-        .dot-offline { background: var(--muted); }
-
-        .traffic-box { display: flex; flex-direction: column; gap: 2px; font-size: 12px; font-family: monospace; }
-        .traffic-in { color: var(--success); }
-        .traffic-out { color: var(--accent); }
-
-        .actions { display: flex; gap: 8px; justify-content: flex-end; }
-        .btn-action { 
-            background: #1e293b; 
-            color: #fff; 
-            border: 1px solid var(--border); 
-            padding: 7px 16px; 
-            border-radius: 6px; 
-            font-size: 13px; 
-            font-weight: 600; 
-            cursor: pointer; 
-            text-decoration: none;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .btn-action:hover { border-color: var(--accent); color: var(--accent); }
-        .btn-qr { background: #f1f5f9; color: #0f172a; border: none; }
-        .btn-qr:hover { background: #fff; color: #000; box-shadow: 0 0 10px rgba(255,255,255,0.2); }
-        .btn-download { background: var(--accent); color: var(--bg); border: none; }
-        .btn-download:hover { opacity: 0.9; color: var(--bg); box-shadow: 0 0 12px rgba(56, 189, 248, 0.3); }
-
-        @media (max-width: 768px) {
-            body { padding: 15px 3% !important; }
-            .top-nav { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; padding: 14px 4% !important; }
-            .user-welcome { border-left: none !important; padding-left: 0 !important; margin-top: 4px; }
-            
-            .client-row {
-                display: flex !important; flex-direction: column !important; width: 100% !important; padding: 14px 4% !important; gap: 10px !important;
-            }
-            .client-row .cell {
-                display: flex !important; flex-direction: row !important; justify-content: space-between !important; align-items: center !important; width: 100% !important; border-bottom: 1px solid var(--border) !important; padding-bottom: 6px !important;
-            }
-            .client-row .cell .label { margin-bottom: 0 !important; }
-            .client-row .val, .client-row .status, .client-row .traffic-box { text-align: right !important; justify-content: flex-end !important; }
-            .actions { width: 100% !important; justify-content: space-between !important; border-top: 1px dashed var(--border) !important; padding-top: 10px !important; margin-top: 5px; }
-            .actions a { flex: 1; text-align: center; }
-            .actions .btn-action { display: flex; width: 100%; box-sizing: border-box; }
-        }
-    </style>
-</head>
-<body>
-    <div class="wrapper">
-        <div class="top-nav">
-            <div class="brand-section">
-                <h1>Система инспекции AmneziaWG</h1>
-                <div class="user-welcome">Конфигурации пользователя:<span class="user-badge">{{ target_user.username if target_user else user_id }}</span></div>
-            </div>
-            <div>
-                <a href="/admin/users" class="btn-nav btn-back">← В админку</a>
-            </div>
-        </div>
-
-        <div class="list">
+{% extends "base.html" %}
+{% block page_title %}Конфиги: <span style="color: var(--accent);">{{ target_user.username if target_user else user_id }}</span>{% endblock %}
+{% block content %}
+    <div class="ui-card">
+        <div style="display: flex; flex-direction: column; gap: 8px;">
             {% for client in clients %}
-                <div class="client-row">
-                    <div class="cell">
-                        <div class="name-container">
-                            <span class="name" title="{{ client.name }}">{{ client.name }}</span>
-                        </div>
-                        <span class="sub-text">👤 {{ target_user.username if target_user else 'Пользователь' }}</span>
+                <div style="display: grid; grid-template-columns: 2fr 1.5fr 1fr 1.5fr auto; gap: 15px; align-items: center; padding: 12px 16px; background: rgba(255,255,255,0.02); border-radius: 8px;">
+                    <div style="font-weight: 600; font-size: 15px;"><i class="fa-solid fa-mobile-screen-button" style="color: var(--muted); margin-right: 8px;"></i> {{ client.name }}</div>
+                    <div style="font-size: 13px; color: var(--muted); font-family: monospace;">{{ client.ip }}</div>
+                    <div>
+                        {% if client.status == 'Онлайн' %}<span style="color: var(--success); font-size: 13px; font-weight: 600;"><i class="fa-solid fa-circle" style="font-size: 8px;"></i> Онлайн</span>
+                        {% else %}<span style="color: var(--muted); font-size: 13px; font-weight: 600;"><i class="fa-solid fa-circle" style="font-size: 8px;"></i> Офлайн</span>{% endif %}
                     </div>
-
-                    <div class="cell">
-                        <span class="label">Внутренний IP</span>
-                        <span class="val monospace">{{ client.ip }}</span>
+                    <div style="display: flex; flex-direction: column; font-size: 12px; font-family: monospace;">
+                        <span style="color: var(--success);"><i class="fa-solid fa-arrow-down"></i> {{ client.rx }}</span>
+                        <span style="color: var(--accent);"><i class="fa-solid fa-arrow-up"></i> {{ client.tx }}</span>
                     </div>
-
-                    <div class="cell">
-                        <span class="label">Статус</span>
-                        <span class="status {% if client.status == 'Онлайн' %}status-online{% else %}status-offline{% endif %}">
-                            <span class="dot {% if client.status == 'Онлайн' %}dot-online{% else %}dot-offline{% endif %}"></span>
-                            {{ client.status }}
-                        </span>
-                    </div>
-
-                    <div class="cell">
-                        <span class="label">Трафик RX/TX</span>
-                        <div class="traffic-box">
-                            <span class="traffic-in">📥 {{ client.rx }}</span>
-                            <span class="traffic-out">📤 {{ client.tx }}</span>
-                        </div>
-                    </div>
-
-                    <div class="actions">
-                        <a href="/cabinet/download/{{ client.ip }}?qr=1" class="btn-action btn-qr" target="_blank">QR</a>
-                        <a href="/cabinet/download/{{ client.ip }}" class="btn-action btn-download">Скачать</a>
+                    <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                        <a href="/cabinet/download/{{ client.ip }}?qr=1" target="_blank" style="background: #1e293b; color: #fff; text-decoration: none; padding: 8px 12px; border-radius: 6px;"><i class="fa-solid fa-qrcode"></i> QR</a>
+                        <a href="/cabinet/download/{{ client.ip }}" style="background: var(--accent-dim); color: var(--accent); text-decoration: none; padding: 8px 12px; border-radius: 6px;"><i class="fa-solid fa-download"></i> Скачать</a>
                     </div>
                 </div>
-            {% else %}
-                <div style="text-align: center; padding: 40px; color: var(--muted); background: var(--card); border: 1px solid var(--border); border-radius: 12px;">
-                    У данного пользователя пока нет созданных устройств.
-                </div>
-            {% endfor %}
+            {% else %}<div style="text-align: center; padding: 30px; color: var(--muted);">У пользователя нет устройств.</div>{% endfor %}
         </div>
     </div>
-</body>
-</html>
+{% endblock %}

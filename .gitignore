@@ -1,7 +1,10 @@
 venv/
 __pycache__/
 *.log
-*.sqlite3
-*.db
-custom_clients.txt
+*.zip
+ngrok
+users.json
 traffic_history.json
+custom_clients.txt
+*.backup*
+.git/

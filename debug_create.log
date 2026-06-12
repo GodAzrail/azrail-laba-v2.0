@@ -1,6 +1,0 @@
-=== ГЕНЕРАЦИЯ ДЛЯ: wireguard-vps ===
-Шаг 1. Сгенерирован PrivateKey:  OEM9CpbSwHfWFF7CiSYOW0vkh1udkFKjJOM2GFxxdVk=
-Шаг 2. Сгенерирован PublicKey:   B1ci8Z2n6Cl843QxHXqzErt9+LGlmCwBnD7bSkKeZR8=
-Шаг 3. Сгенерирован PresharedKey: +oL0k+47+jDBIjRpr2/87pNogQ2PkUgXJR2yi8yzxhI=
-Шаг 4. Назначен IP:               10.8.0.2
-Строка для clientsTable: 10.8.0.2=wireguard-vps|OEM9CpbSwHfWFF7CiSYOW0vkh1udkFKjJOM2GFxxdVk=|+oL0k+47+jDBIjRpr2/87pNogQ2PkUgXJR2yi8yzxhI=
